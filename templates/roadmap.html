@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Roadmap</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <section id="roadmap">
+        <div class="container">
+            <header>
+                <div class="profile-logo">
+                    <img src="default-profile.png" id="profile-img" alt="Profile Icon" width="50" height="50">
+                    <span id="user-name"></span> <!-- Username should be next to the image -->
+                </div>
+            </header>            
+
+            <h1>Learning Roadmap</h1>
+            <div class="roadmap">
+                <div class="level" id="level-1" onclick="startLearn('level1')">Level 1: Basics</div>
+                <div class="level locked" id="level-2" onclick="startQuiz('level2')">
+                    Level 2: Intermediate <span class="lock-icon">🔒</span>
+                </div>
+                <div class="level locked" id="level-3" onclick="startQz('level3')">
+                    Level 3: Advanced <span class="lock-icon">🔒</span>
+                </div>
+            </div>
+            <div class="level" id="translation" onclick="translation()">
+                Translation
+            </div>
+            <div class="button-container">
+                <button id="roadmap-btn" onclick="logoutUser()">Logout</button>
+                <button id="dashboard-btn" onclick="dash()">Dashboard</button>
+            </div>            
+        </div>
+    </section>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let name = localStorage.getItem('username');
+        let gender = localStorage.getItem("gender");
+        let profileImg = document.getElementById("profile-img");
+        if (gender === "male") {
+            profileImg.src = "../static/male-profile.png";
+        } else if (gender === "female") {
+            profileImg.src = "../static/female-profile.png";
+        }
+    
+fetch("/get_current_user")
+    .then(response => response.json())
+    .then(data => {
+        if (data.user_id) {
+            let nameElement = document.getElementById("user-name");
+            nameElement.textContent = data.username || localStorage.getItem("username"); // Fallback to local storag
+            if (data.gender) {
+                        localStorage.setItem("gender", data.gender);
+                    }
+
+            // Update profile image again after fetching user data
+            let updatedGender = localStorage.getItem("gender");
+            if (updatedGender === "male") {
+                profileImg.src = "../static/male-profile.png";
+            } else if (updatedGender === "female") {
+                profileImg.src = "../static/female-profile.png";
+            }
+            if (data.level1Completed !== undefined) {
+                localStorage.setItem("level1Completed", data.level1Completed ? "true" : "false");
+            }
+            if (data.level2Completed !== undefined) {
+                localStorage.setItem("level2Completed", data.level2Completed ? "true" : "false");
+            }
+
+            unlockLevels();  // 
+        } 
+        else {
+            window.location.href = "web.html";
+        }
+    });
+});
+
+function logoutUser() {
+    fetch("/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Logout failed");
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data.message); // Log message
+        localStorage.clear(); // Clear stored user data
+        window.location.href = "/";  // 
+    })
+    .catch(error => console.error("Error logging out:", error));
+}
+function dash()
+{
+    window.location.href = 'dashboard.html';
+        }
+function unlockLevels() {
+    let level1Completed = localStorage.getItem("level1Completed") === "true";
+    let level2Completed = localStorage.getItem("level2Completed") === "true";
+    let level1 = document.getElementById("level-1");
+    let level2 = document.getElementById("level-2");
+    let level3 = document.getElementById("level-3");
+
+
+    if (level1) {
+        level1.classList.remove("locked");
+        removeLockIcon(level1);
+        console.log("Level 1 Unlocked");
+    }
+
+    // Force Level 2 to be locked by default
+    if (level2) {
+        level2.classList.add("locked"); // 🔒 Lock Level 3 at the start
+        addLockIcon(level2);
+        console.log("Level 2 Locked");
+
+        if (level1Completed) {
+            level2.classList.remove("locked");
+            removeLockIcon(level2);
+            console.log("Level 2 Unlocked");
+        }
+    }
+
+    if (level3) {
+        level3.classList.add("locked"); // 🔒 Lock Level 3 at the start
+        addLockIcon(level3);
+        console.log("Level 3 Locked");
+
+        if (level2Completed) {
+            level3.classList.remove("locked");
+            removeLockIcon(level3);
+            console.log("Level 3 Unlocked");
+        }
+    }
+}
+function addLockIcon(levelElement) {
+    if (!levelElement.querySelector(".lock-icon")) {
+        let lockSpan = document.createElement("span");
+        lockSpan.className = "lock-icon";
+        lockSpan.textContent = "🔒";
+        levelElement.appendChild(lockSpan);
+    }
+}
+
+function removeLockIcon(levelElement) {
+    let lockSpan = levelElement.querySelector(".lock-icon");
+    if (lockSpan) {
+        lockSpan.remove();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", unlockLevels);
+
+        function dash() {
+            window.location.href = 'dashboard.html';
+        }
+        function startLearn(level) {
+            window.location.href = `temp.html?level=${level}`;
+        }
+
+        function startQuiz(level) {
+            if (localStorage.getItem("level1Completed") === "true") {
+                console.log("Access granted to Intermediate Level.");
+                window.location.href = `temp2.html?level=${level}`;
+            } else {
+                alert("You must complete Level 1 before accessing Level 2!");
+            }
+        }
+
+        function startQz(level) {
+            if (localStorage.getItem("level2Completed") === "true") {
+                console.log("Access granted to Advanced Level.");
+                window.location.href = `temp3.html?level=${level}`;
+            } else {
+                alert("You must complete Level 2 before accessing Level 3!");
+            }
+        }
+
+        function translation() {
+            window.location.href = 'sign.html';
+        }
+    </script>
+</body>
+</html>

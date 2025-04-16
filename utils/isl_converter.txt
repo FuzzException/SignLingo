@@ -1,0 +1,613 @@
+isl_converter.py
+import spacy
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
+import ssl
+import nltk
+
+# SSL certificate handling for NLTK downloads
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+# Download NLTK resources if not already downloaded
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+    
+try:
+    nltk.data.find('taggers/averaged_perceptron_tagger')
+except LookupError:
+    nltk.download('averaged_perceptron_tagger')
+    
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet')
+    
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
+# Load NLP components
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    print("Downloading spaCy model...")
+    import sys
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
+    nlp = spacy.load("en_core_web_sm")
+
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words("english"))
+
+def convert_to_isl(sentence):
+    """
+    Convert English sentence to Indian Sign Language (ISL) structure
+    """
+    # Process the sentence with spaCy
+    doc = nlp(sentence)
+    
+    # Detect tense
+    tense_markers = {
+        "future": ["will", "shall", "going to"],
+        "past": ["was", "were", "had", "did"],
+        "present_continuous": ["am", "is", "are"],
+    }
+    
+    tense = None
+    for token in doc:
+        if token.text.lower() in tense_markers["future"] or token.tag_ == "MD":
+            tense = "future"
+            break
+        elif token.text.lower() in tense_markers["past"] or token.tag_ in ["VBD", "VBN"]:
+            tense = "past"
+            break
+        elif token.text.lower() in tense_markers["present_continuous"] and any(t.tag_ == "VBG" for t in doc):
+            tense = "present_continuous"
+            break
+    
+    # Handle negations
+    negation_words = {"not", "no", "never", "don't", "doesn't", "isn't", "won't", "didn't", "can't", "shouldn't"}
+    negation_expressions = {"do not", "does not", "is not", "will not", "did not", "cannot", "should not"}
+    
+    negation_flag = False
+    for neg_expr in negation_expressions:
+        if neg_expr in sentence.lower():
+            negation_flag = True
+            break
+    
+    if not negation_flag:
+        for token in doc:
+            if token.text.lower() in negation_words:
+                negation_flag = True
+                break
+    
+    # Extract components for ISL structure
+    subjects = []
+    objects = []
+    verbs = []
+    adjectives = {}  # Map nouns to their adjectives
+    adverbs = []
+    time_expressions = []
+    question_words = []
+    possessives = {}  # Map nouns to their possessors
+    numbers = {}      # Map nouns to their numerical values
+    
+    # First pass to identify subjects, possessives, and numbers
+    for token in doc:
+        # Store question words
+        if token.tag_ in ["WDT", "WP", "WP$", "WRB"]:
+            question_words.append(token.text.lower())
+        
+        # Store time expressions
+        if token.dep_ == "npadvmod" and token.pos_ == "NOUN":
+            time_expressions.append(token.text.lower())
+            
+        # Handle possessive pronouns (my, your, etc.)
+        if token.tag_ == "PRP$":
+            if token.head.lemma_ not in possessives:
+                possessives[token.head.lemma_] = token.text.lower()
+                
+        # Store numbers associated with nouns
+        if token.pos_ == "NUM":
+            # Find the noun this number modifies or relates to
+            if token.head.pos_ == "NOUN":
+                numbers[token.head.lemma_] = token.text
+            # Handle predicative numbers (age is 22)
+            elif token.dep_ == "attr" or token.dep_ == "acomp":
+                for t in doc:
+                    if t.pos_ == "NOUN" and t.dep_ == "nsubj":
+                        numbers[t.lemma_] = token.text
+                        break
+    
+    # Build adjective mapping
+    for token in doc:
+        if token.pos_ == "ADJ":
+            # Find the noun this adjective modifies
+            if token.head.pos_ == "NOUN":
+                if token.head.lemma_ not in adjectives:
+                    adjectives[token.head.lemma_] = []
+                adjectives[token.head.lemma_].append(token.text.lower())
+    
+    # Extract main components
+    for token in doc:
+        # Skip articles and auxiliary verbs
+        if token.text.lower() in {"a", "an", "the", "is", "are", "am", "was", "were", "be", "to"}:
+            continue
+            
+        # Skip negation words as we handle them separately
+        if token.text.lower() in negation_words:
+            continue
+            
+        # Handle subjects, objects, and verbs
+        if token.dep_ in ["nsubj", "nsubjpass"] and token.pos_ in ["NOUN", "PROPN", "PRON"]:
+            # Convert "I" to "Me" for ISL
+            word = "Me" if token.text.lower() == "i" else token.text
+            subjects.append(word.lower())
+        elif token.dep_ in ["dobj", "pobj", "attr"] and token.pos_ in ["NOUN", "PROPN", "PRON"]:
+            objects.append(token.lemma_.lower())
+        elif token.pos_ == "VERB" and token.dep_ not in ["aux", "auxpass"]:
+            # Get the base form of the verb
+            verbs.append(token.lemma_.lower())
+        elif token.pos_ == "ADV" and token.dep_ != "advmod":
+            adverbs.append(token.text.lower())
+    
+    # Special case: Handle imperative sentences (commands) like "Keep a safe distance"
+    is_imperative = False
+    if len(subjects) == 0 and len(verbs) > 0 and doc[0].pos_ == "VERB":
+        is_imperative = True
+    
+    # Build the ISL sentence
+    isl_parts = []
+    
+    # Start with question words if any
+    if question_words:
+        isl_parts.extend(question_words)
+    
+    # Add time markers
+    if tense == "past":
+        isl_parts.append("Before")
+    elif tense == "future":
+        isl_parts.append("Will")
+    elif tense == "present_continuous":
+        isl_parts.append("Now")
+    
+    # Add time expressions if any
+    isl_parts.extend(time_expressions)
+    
+    # Add negation if needed
+    if negation_flag:
+        isl_parts.append("No")
+    
+    if is_imperative:
+        # For imperatives: VERB + ADJECTIVE + NOUN (keep safe distance)
+        isl_parts.extend(verbs)
+        
+        # Add adjectives followed by their nouns
+        for obj in objects:
+            obj_with_adj = []
+            
+            # Add possessive if exists
+            if obj in possessives:
+                obj_with_adj.append(possessives[obj])
+                
+            # Add adjectives
+            if obj in adjectives:
+                obj_with_adj.extend(adjectives[obj])
+                
+            obj_with_adj.append(obj)
+            
+            # Add number if exists
+            if obj in numbers:
+                obj_with_adj.append(numbers[obj])
+                
+            isl_parts.extend(obj_with_adj)
+        
+        # Add adverbs
+        isl_parts.extend(adverbs)
+    else:
+        # For non-imperatives: follow SOV structure
+        # Add subjects with their adjectives
+        for subject in subjects:
+            subj_with_adj = []
+            
+            # Add possessive if exists
+            if subject in possessives:
+                subj_with_adj.append(possessives[subject])
+                
+            # Add adjectives
+            if subject in adjectives:
+                subj_with_adj.extend(adjectives[subject])
+                
+            subj_with_adj.append(subject)
+            
+            # Add number if exists
+            if subject in numbers:
+                subj_with_adj.append(numbers[subject])
+                
+            isl_parts.extend(subj_with_adj)
+        
+        # Add objects with their adjectives
+        for obj in objects:
+            obj_with_adj = []
+            
+            # Add possessive if exists
+            if obj in possessives:
+                obj_with_adj.append(possessives[obj])
+                
+            # Add adjectives
+            if obj in adjectives:
+                obj_with_adj.extend(adjectives[obj])
+                
+            obj_with_adj.append(obj)
+            
+            # Add number if exists
+            if obj in numbers:
+                obj_with_adj.append(numbers[obj])
+                
+            isl_parts.extend(obj_with_adj)
+        
+        # Add adverbs
+        isl_parts.extend(adverbs)
+        
+        # Add verbs
+        isl_parts.extend(verbs)
+    
+    # Special case for state/identity sentences
+    is_identity_sentence = False
+    for token in doc:
+        if token.lemma_ == "be" and any(t.dep_ == "attr" for t in doc):
+            is_identity_sentence = True
+            break
+            
+    # Ensure that sentences like "My age is 22" retain the number
+    if is_identity_sentence and len(subjects) > 0:
+        for subject in subjects:
+            if subject in numbers and numbers[subject] not in isl_parts:
+                # Find where to insert the number (right after the subject)
+                subject_index = isl_parts.index(subject) if subject in isl_parts else -1
+                if subject_index != -1:
+                    isl_parts.insert(subject_index + 1, numbers[subject])
+    
+    # Special case: if the sentence is just about states or feelings (like "I am thirsty")
+    if "am" in sentence.lower() and len(subjects) > 0 and len(objects) == 0 and len(verbs) == 0:
+        # Extract predicative adjectives
+        for token in doc:
+            if token.pos_ == "ADJ" and token.dep_ == "acomp":
+                isl_parts.append(token.text.lower())
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    isl_parts = [x for x in isl_parts if not (x in seen or seen.add(x))]
+    
+    # Create the final ISL sentence
+    isl_sentence = " ".join(isl_parts).strip()
+    
+    # If empty output, handle various cases
+    if not isl_sentence:
+        # Try to construct a minimal sensible output
+        if len(subjects) > 0 and any(s in numbers for s in subjects):
+            # For identity sentences with numbers
+            for s in subjects:
+                if s in numbers:
+                    isl_sentence = f"{s} {numbers[s]}"
+                    break
+        elif len(verbs) > 0:
+            # Return at least the main verb
+            isl_sentence = verbs[0]
+        elif len(objects) > 0:
+            # Return at least the main object
+            isl_sentence = objects[0]
+        elif len(subjects) > 0:
+            # Return at least the main subject
+            isl_sentence = subjects[0]
+    words = isl_sentence.split()  # Convert ISL sentence into a list of words
+
+    return isl_sentence, words
+    
+quiz_generator.py
+import random
+from utils.isl_converter import convert_to_isl
+
+# Sample English sentences for quizzes
+SAMPLE_SENTENCES = {
+    'easy': [
+        "My name is John",
+        "I am happy",
+        "She is a teacher",
+        "He went to school",
+        "Keep a safe distance",
+        "I will call you tomorrow",
+        "They work from home",
+        "Can you help me",
+        "Do not touch this",
+        "The class is over"
+    ],
+    'medium': [
+        "Yesterday I watched a beautiful movie",
+        "My brother will graduate from college next month",
+        "Can you tell me where the bathroom is",
+        "I have been studying sign language for two years",
+        "She doesn't want to go to the party tonight",
+        "The red car belongs to my father",
+        "We should finish our homework before playing",
+        "Please sign your name on the dotted line",
+        "How many languages do you speak fluently",
+        "The children are playing in the garden"
+    ],
+    'hard': [
+        "If it rains tomorrow, the outdoor event will be canceled",
+        "After finishing her degree, she plans to work abroad for experience",
+        "Can you explain why this algorithm is more efficient than the previous one",
+        "Despite the challenges, they managed to complete the project on time",
+        "The professor who taught us last semester has published a new book",
+        "You should submit your application before the deadline expires next week",
+        "When was the last time you visited your grandparents in their village",
+        "The company announced that they will be hiring twenty new employees soon",
+        "Please make sure that all electronic devices are turned off during the exam",
+        "How many hours do you typically spend on learning new skills every day"
+    ]
+}
+
+def generate_quiz(difficulty='easy', focus_areas=None, num_questions=5):
+    """
+    Generate a quiz with different question types
+    
+    Parameters:
+    difficulty (str): 'easy', 'medium', or 'hard'
+    focus_areas (list): List of specific areas to focus on (e.g., ['negation', 'questions'])
+    num_questions (int): Number of questions to generate
+    
+    Returns:
+    dict: Quiz data structure with questions and answers
+    """
+    if difficulty not in SAMPLE_SENTENCES:
+        difficulty = 'easy'
+    
+    # Select sentences for this quiz
+    available_sentences = SAMPLE_SENTENCES[difficulty]
+    selected_sentences = random.sample(available_sentences, min(num_questions, len(available_sentences)))
+    
+    quiz = {
+        'difficulty': difficulty,
+        'questions': []
+    }
+    
+    question_types = ['reordering', 'multiple_choice', 'fill_blanks']
+    
+    for i, sentence in enumerate(selected_sentences):
+        # Convert to ISL
+        isl_sentence = convert_to_isl(sentence)
+        print(f"Converted ISL sentence: {isl_sentence} (type: {type(isl_sentence)})")
+
+        isl_words = isl_sentence.split()
+        
+        # Alternate question types
+        question_type = question_types[i % len(question_types)]
+        
+        if question_type == 'reordering':
+            # Create a reordering question
+            shuffled_words = isl_words.copy()
+            while shuffled_words == isl_words:  # Make sure it's actually shuffled
+                random.shuffle(shuffled_words)
+            
+            question = {
+                'id': f'q{i+1}',
+                'type': 'reordering',
+                'english': sentence,
+                'shuffled_words': shuffled_words,
+                'correct_order': list(isl_words)
+            }
+            
+        elif question_type == 'multiple_choice':
+            # Create a multiple choice question about sentence structure
+            options = []
+            
+            # Correct option
+            options.append(isl_sentence)
+            
+            # Generate incorrect options by altering word order
+            for _ in range(3):
+                wrong_order = isl_words.copy()
+                random.shuffle(wrong_order)
+                wrong_sentence = " ".join(wrong_order)
+                print(f"Generated option: {wrong_sentence} (type: {type(wrong_sentence)})")
+                
+                if wrong_sentence not in options:
+                    options.append(wrong_sentence)
+            
+            # If we couldn't generate enough unique options, add more
+            while len(options) < 4:
+                # Add an option with an extra word
+                extra_words = ["always", "sometimes", "maybe", "really", "very", "soon"]
+                wrong_order = isl_words.copy()
+                wrong_order.insert(random.randint(0, len(wrong_order)), random.choice(extra_words))
+                wrong_sentence = " ".join(wrong_order)
+                
+                if wrong_sentence not in options:
+                    options.append(wrong_sentence)
+            
+            random.shuffle(options)
+            
+            question = {
+                'id': f'q{i+1}',
+                'type': 'multiple_choice',
+                'english': sentence,
+                'question': 'Which is the correct ISL structure for this sentence?',
+                'options': options,
+                'correct_answer': options.index(isl_sentence)
+            }
+            
+        elif question_type == 'fill_blanks':
+            # Create a fill-in-the-blanks question
+            blanked_words = isl_words.copy()
+            
+            # Determine how many blanks (1 or 2 depending on sentence length)
+            num_blanks = 2 if len(blanked_words) >= 4 else 1
+            blank_positions = random.sample(range(len(blanked_words)), num_blanks)
+            
+            blanks = {}
+            for pos in blank_positions:
+                blanks[pos] = str(blanked_words[pos])
+                blanked_words[pos] = '_____'
+            
+            question = {
+                'id': f'q{i+1}',
+                'type': 'fill_blanks',
+                'english': sentence,
+                'sentence_with_blanks': " ".join(blanked_words),
+                'blanks': blanks,
+                'options': list(blanks.values())  # Provide the correct words as options
+            }
+            
+        quiz['questions'].append(question)
+    
+    return quiz
+
+def evaluate_quiz(quiz, user_answers):
+    print("Quiz structure:", quiz, type(quiz))  # Debug statement
+    """
+    Evaluate user answers for a quiz
+    
+    Parameters:
+    quiz (dict): Quiz structure
+    user_answers (dict): User's answers keyed by question id
+    
+    Returns:
+    dict: Results with score and feedback
+    """
+    results = {
+        'total_questions': len(quiz['questions']),
+        'correct_answers': 0,
+        'score_percentage': 0,
+        'question_results': {},
+        'weak_areas': [],
+        'next_difficulty': quiz['difficulty']
+    }
+    
+    for question in quiz['questions']:
+        print("Question structure:", question, type(question))  # Debug statement
+        q_id = question['id']
+        if q_id not in user_answers:
+            results['question_results'][q_id] = {
+                'correct': False,
+                'feedback': 'No answer provided'
+            }
+            continue
+            
+        user_answer = user_answers[q_id]
+        
+        if question['type'] == 'reordering':
+            correct_order = question['correct_order']
+            if isinstance(correct_order, tuple):
+                correct_order = list(correct_order)  # Ensure it's a list
+            correct = user_answer == correct_order
+            feedback = 'Correct!' if correct else f"The correct order is: {' '.join(correct_order)}"
+
+            
+        elif question['type'] == 'multiple_choice':
+            try:
+                selected_index = int(user_answer)
+                correct = selected_index == question['correct_answer']
+                correct_option = question['options'][question['correct_answer']]
+                feedback = 'Correct!' if correct else f"The correct answer is: {correct_option}"
+            except (ValueError, IndexError):
+                correct = False
+                feedback = 'Invalid answer'
+                
+        elif question['type'] == 'fill_blanks':
+            # Check if all blanks are filled correctly
+            all_correct = True
+            
+            for pos, correct_word in question['blanks'].items():
+                if str(pos) not in user_answer or user_answer[str(pos)] != correct_word:
+                    all_correct = False
+                    break
+                    
+            correct = all_correct
+            
+            if correct:
+                feedback = 'Correct!'
+            else:
+                correct_sentence = " ".join(question['correct_order'] if 'correct_order' in question else question['sentence_with_blanks'].replace('_____', '[answer]'))
+                feedback = f"The correct sentence is: {correct_sentence}"
+        
+        results['question_results'][q_id] = {
+            'correct': correct,
+            'feedback': feedback
+        }
+        
+        if correct:
+            results['correct_answers'] += 1
+        else:
+            # Track areas of weakness based on question type
+            results['weak_areas'].append(question['type'])
+    
+    # Calculate score percentage
+    if results['total_questions'] > 0:
+        results['score_percentage'] = (results['correct_answers'] / results['total_questions']) * 100
+    
+    # Determine next difficulty level
+    if results['score_percentage'] >= 80:
+        if quiz['difficulty'] == 'easy':
+            results['next_difficulty'] = 'medium'
+        elif quiz['difficulty'] == 'medium':
+            results['next_difficulty'] = 'hard'
+    elif results['score_percentage'] < 50:
+        if quiz['difficulty'] == 'hard':
+            results['next_difficulty'] = 'medium'
+        elif quiz['difficulty'] == 'medium':
+            results['next_difficulty'] = 'easy'
+    
+    # Count occurrences of each weak area
+    from collections import Counter
+    weak_area_counts = Counter(results['weak_areas'])
+    
+    # Only keep the most frequent weak areas
+    results['weak_areas'] = [area for area, count in weak_area_counts.most_common(2)]
+    
+    return results
+word,url,domain
+apple,https://www.youtube.com/watch?v=nuYcIMq8e5U,Fruits
+mango,https://www.youtube.com/watch?v=JC80hJOObmg,Fruits    
+lion,https://www.youtube.com/watch?v=RhEpVt-AEK8,Animals
+watermelon,https://www.youtube.com/watch?v=3qKiJRMOzsc,Fruits
+zebra,https://www.youtube.com/watch?v=DCjd5dJLuF4,Animals
+bus,https://www.youtube.com/watch?v=I9OiCuVT6TQ,Vehicles
+bus,https://www.youtube.com/watch?v=HufgJPpb1kQ,Vehicles
+boat,https://www.youtube.com/watch?v=xD3S5OUhSRs,Vehicles
+garlic,https://www.youtube.com/watch?v=UpDvz4TFXuY,Vegetables
+elephant,https://www.youtube.com/watch?v=LlpSiou4X7w,Animals
+elephant,https://www.youtube.com/watch?v=kU3ISrjeygE,Animals
+eagle,https://www.youtube.com/watch?v=gnMQXat5V9I,Birds
+dog,https://www.youtube.com/watch?v=7O43NW_PICc,Animals
+cherry,https://www.youtube.com/watch?v=KnE_y9wziOc,Fruits
+cabbage,https://www.youtube.com/watch?v=5JrVqdElpw4,Vegetables
+carrot,https://www.youtube.com/watch?v=UMMYGhp1SD4,Vegetables
+car,https://www.youtube.com/watch?v=SUGgjeP54CQ,Vehicles 
+cat,https://www.youtube.com/watch?v=wubfL2VbBLY,Animals   
+cat,https://www.youtube.com/watch?v=Rc4vFhGRgIs,Animals   
+banana,https://www.youtube.com/watch?v=GYVZ3VpzJRI,Fruits    
+train,https://www.youtube.com/watch?v=wDy5hBdrwoc,Vehicles  
+tractor,https://www.youtube.com/watch?v=x7TnEHc0viU,Vehicles  
+truck,https://www.youtube.com/watch?v=nZC6NXo3SAc,Vehicles  
+ship,https://www.youtube.com/watch?v=vqWFY4rbASg,Vehicles  
+sparrow,https://www.youtube.com/watch?v=04Y_zC6sQ80,Birds     
+parrot,https://www.youtube.com/watch?v=2PcBSQ4A8XM,Birds     
+pear,https://www.youtube.com/watch?v=lzCeQ6VI2zU,Fruits    
+peacock,https://www.youtube.com/watch?v=mnZrhrQqNQk,Birds     
+penguin,https://www.youtube.com/watch?v=fnOThtPRhVM,Birds     
+pineapple,https://www.youtube.com/watch?v=jvTF5BY3UI4,Fruits    
+potato,https://www.youtube.com/watch?v=3ir8Rnwx8TY,Vegetables
+onion,https://www.youtube.com/watch?v=Qo2EdbZg68A,Vegetables
+orange,https://www.youtube.com/watch?v=MMrUJwt_8oQ,Fruits    
+owl,https://www.youtube.com/watch?v=3ymIgijDrC0,Birds     
+monkey,https://www.youtube.com/watch?v=s67I8VUigAU,Animals   
+duck,https://www.youtube.com/watch?v=oA3QZPn2m1k,Birds 

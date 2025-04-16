@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Roadmap</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <section id="roadmap">
+        <div class="container">
+            <header>
+                <div class="profile-logo">
+                    <img src="default-profile.png" id="profile-img" alt="Profile Icon" width="50" height="50">
+                    <span id="user-name"></span> <!-- Display user's name -->
+                </div>
+            </header>
+
+            <h1>Learning Roadmap</h1>
+            <section id="roadmap">
+                <div class="container1">
+                    <h1>Learning Roadmap</h1>
+                    <div class="roadmap">
+                        <div class="level" id="level-1" onclick="startLearn('level1')">Level 1: Basics</div>
+                        <div class="level locked" id="level-2" onclick="startQuiz('level2')">Level 2: Intermediate <div class="lock-icon">🔒</div></div>
+                        <div class="level locked" id="level-3" onclick="startQz('level3')">Level 3: Advanced <div class="lock-icon">🔒</div></div>
+                    </div>
+                </div>
+            </section>
+            <div class="level" id="translation" onclick="translation()">
+                Translation
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Retrieve user data from localStorage
+            let name = localStorage.getItem('userName');
+            let gender = localStorage.getItem('userGender');
+
+            if (name && gender) {
+                // Display the roadmap section
+                document.getElementById('roadmap').classList.remove('hidden');
+
+                // Update profile image and name
+                document.getElementById('user-name').textContent = name;
+
+                let profileImg = document.getElementById('profile-img');
+                if (gender === 'male') {
+                    profileImg.src = '../static/male-profile.png'; // Add male profile image
+                } else {
+                    profileImg.src = '../static/female-profile.png'; // Add female profile image
+                }
+            } else {
+                // If no user data, redirect back to homepage
+                alert('Please enter your details first.');
+                window.location.href = 'web.html';
+            }
+        });
+
+        function startLearn(level) {
+            // Unlock the next level and save progress in localStorage
+            if (level === 'level1') {
+                localStorage.setItem('level1Completed', 'true');
+                //alert('Level 1 completed! Level 2 unlocked.');
+            }
+            window.location.href = 'temp.html?level=' + level;
+        }
+
+        function startQuiz(level) {
+            // Ensure the level is not locked before starting
+            if (!document.getElementById(level).classList.contains('locked')) {
+                if (level === 'level2') {
+                    localStorage.setItem('level2Completed', 'true');
+                    alert('Level 1 completed! Level 2 unlocked.');
+                }
+                window.location.href = 'temp2.html?level=' + level;
+            } else {
+                alert('Complete the previous level to unlock this!');
+            }
+        }
+        function startQz(level) {
+            // Ensure the level is not locked before starting
+            if (!document.getElementById(level).classList.contains('locked')) {
+                if (level === 'level3') {
+                    localStorage.setItem('level3Completed', 'true');
+                    alert('Level 2 completed! Level 3 unlocked.');
+                }
+                window.location.href = 'roadmap.html?level=' + level;
+            } else {
+                alert('Complete the previous level to unlock this!');
+            }
+        }
+
+        function translation() {
+                window.location.href = 'sign.html';
+    
+        }
+
+        // Function to check user's progress and unlock levels
+        function checkUserProgress() {
+            console.log('Checking user progress...');
+            if (localStorage.getItem('level1Completed') === 'true') {
+                document.getElementById('level2').classList.remove('locked');
+                document.getElementById('level2').querySelector('.lock-icon').style.display = 'none';
+            }
+            if (localStorage.getItem('level2Completed') === 'true') {
+                document.getElementById('level3').classList.remove('locked');
+                document.getElementById('level3').querySelector('.lock-icon').style.display = 'none';
+            }
+            if (localStorage.getItem('level3Completed') === 'true') {
+                document.getElementById('translation').classList.remove('locked');
+                document.getElementById('translation').querySelector('.lock-icon').style.display = 'none';
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let userId = 1; // Change this based on the logged-in user
+
+            fetch(`/progress/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.progress_level) {
+                        unlockLevels(data.progress_level);
+                    }
+                });
+
+            function unlockLevels(progressLevel) {
+                for (let i = 1; i <= progressLevel; i++) {
+                    let levelElement = document.getElementById(`level-${i}`);
+                    if (levelElement) {
+                        levelElement.classList.remove("locked");
+                        let lockIcon = levelElement.querySelector(".lock-icon");
+                        if (lockIcon) {
+                            lockIcon.remove();
+                        }
+                    }
+                }
+            }
+        });
+
+        // Check progress when the page loads
+        document.addEventListener('DOMContentLoaded', checkUserProgress);
+
+//
+document.addEventListener("DOMContentLoaded", function () {
+    let name = localStorage.getItem('username');
+    let date = localStorage.getItem('date');
+    let progressLevel = localStorage.getItem('progress_level');
+    let score1 = localStorage.getItem('noquiz') || 0;
+    let score2 = localStorage.getItem('alphaquiz') || 0;
+
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                console.log("API Response:", data);
+                let storedUser = localStorage.getItem('user_id');
+                if (storedUser && storedUser !== data.user_id) {
+                    localStorage.clear();  // Reset all stored data
+                }
+
+                localStorage.setItem('user_id', data.user_id);
+                document.getElementById("username").textContent = name;
+                document.getElementById("lastActive").textContent = date;
+                document.getElementById("progressLevel").textContent = progressLevel;
+                document.getElementById("quizScore").textContent = score1 + "%";
+                document.getElementById("memoryGameScore").textContent = score2 + "%";
+
+                // Update progress bar based on quiz progress
+                document.getElementById("progress-fill").style.width = score2 + "%";
+                document.getElementById("progress-text").textContent = `Progress: ${score2}%`;
+            } else {
+                alert("Please log in first.");
+                window.location.href = "web.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user data:", error));
+});
+
+    </script>
+</body>
+</html>
+
+@app.route('/update_progress', methods=['POST'])
+def update_progress():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    new_progress = data.get("progress_level")
+
+    if not user_id or not new_progress:
+        return jsonify({"error": "Missing data"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET progress_level = ? WHERE id = ?", (new_progress, user_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Progress updated!"}), 200
+
+    @app.route('/progress/<int:user_id>', methods=['GET'])
+        def get_progress(user_id):
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT progress_level FROM users WHERE id = ?", (user_id,))
+            user = cursor.fetchone()
+            conn.close()
+        
+            if user:
+                return jsonify({"progress_level": user["progress_level"]})
+            return jsonify({"error": "User not found"}), 404
+        

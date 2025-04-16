@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Roadmap</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <section id="roadmap">
+        <div class="container">
+            <header>
+                <div class="profile-logo"></div>
+            </header>
+    
+            <h1>Level 3: Advanced</h1>
+            <div class="roadmap">
+                <div class="level" id="level1" onclick="startAlpha()">Learn</div>
+                <div class="level locked" id="level2" onclick="startRecommend()">
+                    Attend Quiz
+                    <div class="lock-icon">🔒</div>
+                </div>
+            </div>
+    
+            <!-- ✅ Move the button inside the container -->
+            <button id="roadmap-btn" onclick="goToRoadmap()">Go to Roadmap</button>
+    
+        </div> <!-- ✅ Closing container div is now correct -->
+    </section>    
+
+    <script>
+
+        function startAlpha() {
+            // Redirect to the quiz page with the level parameter
+            window.location.href = 'index3.html';
+        }
+
+        function startRecommend() {
+            // Redirect to the quiz page with the level parameter
+            window.location.href = 'quiz3.html';
+        }
+
+        function startQuiz(level) {
+            // Redirect to the quiz page with the level parameter
+            window.location.href = 'game.html';
+        }
+
+        // Function to check user's progress and unlock levels
+        function checkUserProgress() {
+            let completedLevels = ['level1']; // Example progress
+
+            if (completedLevels.includes('level1')) {
+                document.getElementById('level2').classList.remove('locked');
+            }
+            if (completedLevels.includes('level2')) {
+                document.getElementById('level3').classList.remove('locked');
+            }
+        }
+        function goToRoadmap() {
+            window.location.href = 'roadmap.html';
+        }
+        // Check progress when the page loads
+        document.addEventListener('DOMContentLoaded', checkUserProgress);
+    </script>
+</body>
+</html>

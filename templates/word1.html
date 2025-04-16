@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Quiz</title>
+    <link rel="stylesheet" href="../static/quiz-styles.css">
+</head>
+<body>
+    <section id="quiz">
+        <div class="container">
+            <h1 id="quiz-title">Guess the word</h1>
+            <div id="quiz-container">
+                <video id="quiz-video" controls src="" type="video/mp4" style="max-width: 100%; height: auto;">
+                        Your browser does not support the video tag.
+                    </video>                    
+                <div id="options-container"></div>
+                <p id="feedback"></p>
+            </div>
+            <progress id="quiz-progress" value="0" max="100"></progress>
+            <p id="progress-text">0% completed</p>
+                       
+            <div id="options-container"></div>
+            <div id="feedback"></div>                  
+        </div>
+    </section>
+    <script src="../static/word1.js"></script>
+</body>
+</html>

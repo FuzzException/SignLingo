@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Learning - Quiz</title>
+    <link rel="stylesheet" href="../static/style3.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>ISL Learning</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('index3') }}">Learn</a></li>
+                    <li><a href="{{ url_for('quiz3') }}" class="active">Quiz</a></li>
+                    <li><a href="{{ url_for('progress') }}">Progress</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section class="quiz-intro">
+                <h2>Test Your ISL Knowledge</h2>
+                <p>This quiz will test your understanding of Indian Sign Language structure. Complete all questions to see your results.</p>
+                <div class="difficulty-badge {{ quiz.get('difficulty', 'unknown') }}">
+                    {{ quiz.get('difficulty', 'Unknown')|capitalize }} Difficulty
+                </div>
+                
+            </section>
+
+            <section class="quiz-section">
+                <form id="quizForm">
+                    <div id="questionsContainer">
+                        {% for question in quiz.questions %}
+                            <div class="quiz-question" data-question-id="{{ question.id }}" data-question-type="{{ question.type }}">
+                                <h3>Question {{ loop.index }}</h3>
+                                <div class="english-sentence">
+                                    <p>English: <strong>{{ question.english }}</strong></p>
+                                </div>
+
+                                {% if question.type == 'reordering' %}
+                                    <div class="question-instructions">
+                                        <p>Arrange the words in the correct ISL order:</p>
+                                    </div>
+                                    <div class="sortable-container">
+                                        {% for word in question.shuffled_words %}
+                                            <div class="sortable-word">{{ word }}</div>
+                                        {% endfor %}
+                                    </div>
+
+                                {% elif question.type == 'multiple_choice' %}
+                                    <div class="question-instructions">
+                                        <p>{{ question.question }}</p>
+                                    </div>
+                                    <div class="options-container">
+                                        {% for option in question.options %}
+                                            <div class="option">
+                                                <input type="radio" id="{{ question.id }}_option{{ loop.index0 }}" name="{{ question.id }}" value="{{ loop.index0 }}">
+                                                <label for="{{ question.id }}_option{{ loop.index0 }}">{{ option }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                {% elif question.type == 'fill_blanks' %}
+                                    <div class="question-instructions">
+                                        <p>Fill in the blanks with the correct words:</p>
+                                    </div>
+                                    <div class="fill-blanks-container">
+                                        {% set words = question.sentence_with_blanks.split() %}
+                                        {% for word in words %}
+                                            {% if word == '_____' %}
+                                                {% set position = loop.index0 %}
+                                                <input type="text" class="blank-input" data-position="{{ position }}" placeholder="?">
+                                                <datalist id="{{ question.id }}_options{{ position }}">
+                                                    {% for option in question.options %}
+                                                        <option value="{{ option }}">
+                                                    {% endfor %}
+                                                </datalist>
+                                            {% else %}
+                                                <span class="word">{{ word }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="quiz-actions">
+                        <button type="button" id="submitQuiz" class="primary-button">Submit Answers</button>
+                        <button type="button" id="retryQuiz" class="secondary-button" style="display: none;">Try New Quiz</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="quizResults" class="results-section" style="display: none;">
+                <h2>Quiz Results</h2>
+                <div class="score-container">
+                    <p>Your score: <span id="scorePercentage" class="score">0%</span></p>
+                    <p>Correct answers: <span id="correctAnswers">0</span>/<span id="totalQuestions">0</span></p>
+                </div>
+                <div class="next-steps">
+                    <h3>Next Steps</h3>
+                    <p id="nextSteps"></p>
+                </div>
+            </section>
+        </main>
+
+        <div id="messageContainer" class="message-container"></div>
+
+    </div>
+
+    <script src="../static/quiz.js"></script>
+</body>
+</html>

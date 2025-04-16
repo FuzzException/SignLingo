@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Roadmap</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <section id="roadmap">
+        <div class="container">
+            <header>
+                <div class="profile-logo">
+                    <img src="default-profile.png" id="profile-img" alt="Profile Icon" width="50" height="50">
+                    <span id="user-name"></span> <!-- Added this to show the user's name -->
+                </div>
+            </header>
+
+            <h1>Learning Roadmap</h1>
+            <div class="roadmap">
+                <div class="level" id="level1" onclick="startQuiz('level1')">
+                    Level 1: Basics
+                </div>
+                <div class="level locked" id="level2" onclick="alert('Complete Level 1 first!')">
+                    Level 2: Intermediate
+                    <div class="lock-icon">🔒</div>
+                </div>
+                <div class="level locked" id="level3" onclick="alert('Complete Level 2 first!')">
+                    Level 3: Advanced
+                    <div class="lock-icon">🔒</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Retrieve user data from localStorage
+            let name = localStorage.getItem('userName');
+            let gender = localStorage.getItem('userGender');
+
+            if (name && gender) {
+                // Display the roadmap section
+                document.getElementById('roadmap').classList.remove('hidden');
+
+                // Update profile image and name
+                document.getElementById('user-name').textContent = name;
+
+                let profileImg = document.getElementById('profile-img');
+                if (gender === 'male') {
+                    profileImg.src = '../static/male-profile.png'; // Add male profile image
+                } else {
+                    profileImg.src = '../static/female-profile.png'; // Add female profile image
+                }
+            } else {
+                // If no user data, redirect back to homepage
+                alert('Please enter your details first.');
+                window.location.href = 'web.html';
+            }
+        });
+
+        function startQuiz(level) {
+            // Redirect to the quiz page with the level parameter
+            window.location.href = 'temp.html?level=' + level;
+        }
+
+        // Function to check user's progress and unlock levels
+        function checkUserProgress() {
+            let completedLevels = ['level1']; // Example progress
+
+            if (completedLevels.includes('level1')) {
+                document.getElementById('level2').classList.remove('locked');
+            }
+            if (completedLevels.includes('level2')) {
+                document.getElementById('level3').classList.remove('locked');
+            }
+        }
+
+        // Check progress when the page loads
+        document.addEventListener('DOMContentLoaded', checkUserProgress);
+    </script>
+</body>
+</html>

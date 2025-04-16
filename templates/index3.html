@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn Indian Sign Language</title>
+    <link rel="stylesheet" href="../static/style3.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>ISL Learning</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('index3') }}" class="active">Learn</a></li>
+                    <li><a href="{{ url_for('quiz3') }}">Quiz</a></li>
+                    <li><a href="{{ url_for('progress') }}">Progress</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section class="intro">
+                <h2>Learn Indian Sign Language</h2>
+                <p>Enter an English sentence to see its Indian Sign Language (ISL) structure. Click on words to see sign language videos.</p>
+            </section>
+
+            <section class="translation-section">
+                <div class="translation-container">
+                    <div class="translation-input">
+                        <h3>Enter an English sentence</h3>
+                        <textarea id="englishInput" placeholder="Type a sentence in English..."></textarea>
+                        <button id="translateButton" class="primary-button">Translate to ISL</button>
+                    </div>
+                    
+                    <div class="translation-output">
+                        <h3>ISL Structure</h3>
+                        <div id="islOutput" class="isl-result">
+                            <p class="placeholder-text">ISL translation will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="video-section" id="videoSection">
+                <h3>Sign Language Video</h3>
+                <div class="video-container">
+                    <div id="videoPlaceholder" class="video-placeholder">
+                        <p>Click on a word in the ISL output to see the sign language video</p>
+                    </div>
+                    <video id="signVideo" controls style="display: none;">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="video-info">
+                    <h4 id="currentWord"></h4>
+                    <p id="videoUnavailable" class="error-message" style="display: none;">
+                        Video not available for this word. Try another word.
+                    </p>
+                </div>
+            </section>
+
+            <section class="examples-section">
+                <h3>Example Sentences</h3>
+                <div class="examples-container">
+                    <div class="example" data-sentence="My name is John">
+                        <p>My name is John</p>
+                    </div>
+                    <div class="example" data-sentence="I am learning sign language">
+                        <p>I am learning sign language</p>
+                    </div>
+                    <div class="example" data-sentence="How are you today?">
+                        <p>How are you today?</p>
+                    </div>
+                    <div class="example" data-sentence="Please help me find the bathroom">
+                        <p>Please help me find the bathroom</p>
+                    </div>
+                    <div class="example" data-sentence="Can you show me the way to the library?">
+                        <p>Can you show me the way to the library?</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="learn-more">
+                <h3>Learn About ISL Grammar</h3>
+                <div class="grammar-container">
+                    <div class="grammar-card">
+                        <h4>Word Order</h4>
+                        <p>ISL typically follows Subject-Object-Verb (SOV) order, unlike English's Subject-Verb-Object (SVO) structure.</p>
+                    </div>
+                    <div class="grammar-card">
+                        <h4>Time Expressions</h4>
+                        <p>Time references come at the beginning of sentences in ISL, establishing when an action occurs.</p>
+                    </div>
+                    <div class="grammar-card">
+                        <h4>Negation</h4>
+                        <p>Negation is usually expressed by adding 'NO' or specific negative signs, rather than auxiliary verbs like "don't".</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div id="messageContainer" class="message-container"></div>
+    </div>
+
+    <script src="../static/main.js"></script>
+</body>
+</html>

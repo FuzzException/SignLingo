@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Path Dashboard</title>
+    <style>
+    body {
+            font-family: Arial, sans-serif;
+            background: url('../static/backgrd.png') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+/* General Styling */
+.container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .stats-container {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.stat-item {
+    flex: 1;
+    text-align: center;
+    font-size: 18px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #81c784;
+}
+
+        .summary {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .summary div {
+            font-size: 18px;
+        }
+        .highlight {
+            font-size: 24px;
+            font-weight: bold;
+            color: #81c784;
+        }
+        .progress-bar {
+            width: 100%;
+            background: #ddd;
+            border-radius: 5px;
+        }
+        .progress-bar div {
+            width: 45%;
+            background: #81c784;
+            padding: 5px;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .dashboard {
+            max-width: 800px;
+            width: 90%;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+h2, h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Profile Card */
+.profile-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* Progress Section */
+.progress-section, .recommendations, .quiz-progress, .learning-history {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.progress-bar-container {
+    height: 25px;
+    background-color: #e9ecef;
+    border-radius: 15px;
+    margin-top: 15px;
+    overflow: hidden;
+    position: relative;
+}
+
+#progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #28a745;
+    color: white;
+    text-align: center;
+    line-height: 25px;
+    font-weight: bold;
+    transition: width 1s;
+}
+
+/* List Styling */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    background: #f8f9fa;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+ul li:hover {
+    background: #e2e6ea;
+}
+
+/* Button Styling */
+.btn {
+    background: #81c784;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn:hover {
+    background: #66bb6a;
+}
+        .quiz-performance {
+            margin-top: 20px;
+        }
+        #roadmap-btn {
+            margin-top: 20px;
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #87c345;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+        #roadmap-btn:hover {
+            background-color: #66bb6a;
+        }
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard {
+        padding: 15px;
+    }
+
+    h2, h3 {
+        font-size: 20px;
+    }
+
+    ul li {
+        padding: 8px;
+    }
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- User Profile -->
+        <div class="profile-card">
+            <h2>👤 Welcome, <span id="username">User</span></h2>
+            <p>📅 Last Active: <span id="lastActive">Loading...</span></p>
+            <p>🎯 Current Level: <span id="progressLevel">1</span></p>
+        </div>
+        <section class="progress-summary">
+            <div class="card">
+                <h2>Learning Summary</h2>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-value" id="quizzes-taken">0</div>
+                        <div class="stat-label">Quizzes Completed</div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-value" id="learning-streak">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="current-level">Beginner</div>
+                        <div class="stat-label">Current Level</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <h3>📊 Learning Progress</h3>
+            <div class="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+            <div class="level-indicators">
+                <span class="level-marker" style="left: 0%">Beginner</span>
+                <span class="level-marker" style="left: 33%">Intermediate</span>
+                <span class="level-marker" style="left: 66%">Advanced</span>
+                <span class="level-marker" style="left: 100%">Fluent</span>
+            </div>
+            <p id="progress-text">Progress: 0%</p>
+        </div>
+        <!-- Quiz & Memory Game Progress -->
+        <div class="quiz-progress">
+            <h3>📝 Quiz & Game Progress</h3>
+            <p>Number Quiz Score: <span id="quizScore">N/A</span></p>
+            <p>Alphabet Quiz Score: <span id="memoryGameScore">N/A</span></p>
+            <p>Level2 Quiz Score: <span id="Score">N/A</span></p>
+            <p>Level3 Quiz Score: <span id="Score3">N/A</span></p>
+        </div>
+        <section class="quiz-performance">
+            <div class="card">
+                <h2>Quiz Performance</h2>
+                <canvas id="quizChart"></canvas>
+                <div class="quiz-stats">
+                    <p>Average Score: <span id="average-score">N/A</span></p>
+                </div>
+            </div>
+        </section>
+    </div>
+    <button id="roadmap-btn" onclick="goToRoadmap()">Go to Roadmap</button>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/progress")
+                .then(response => response.json())
+                .then(progress => {
+                    let scores = [progress.noquiz || 0, progress.alphaquiz || 0, progress.twoquiz || 0, progress.threequiz || 0];
+                    let ctx = document.getElementById('quizChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ["Number Quiz", "Alphabet Quiz", "Level 2 Quiz", "Level 3 Quiz"],
+                            datasets: [{
+                                label: "Quiz Scores",
+                                data: scores,
+                                backgroundColor: "#007BFF",
+                                borderColor: "#0056b3",
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true, max: 100 }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error("Error fetching progress:", error));
+        });
+function goToRoadmap() {
+            window.location.href = 'roadmap.html';
+        }
+
+function unlockLevels() {
+    let level1Completed = localStorage.getItem("level1Completed") === "true";
+    let level2Completed = localStorage.getItem("level2Completed") === "true";
+
+    let level2 = document.getElementById("level-2");
+    let level3 = document.getElementById("level-3");
+
+    if (level1Completed) {
+        level2.classList.remove("locked");
+        removeLockIcon(level2);
+    }
+
+    if (level2Completed) {
+        level3.classList.remove("locked");
+        removeLockIcon(level3);
+    }
+}
+document.addEventListener("DOMContentLoaded", unlockLevels);
+
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("Dashboard loading...");
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            console.log("User data:", data);
+            if (data.user_id) {
+                localStorage.setItem('user_id', data.user_id);
+                document.getElementById("username").textContent = data.username;
+                
+                // Fetch progress from the backend
+                fetch("/progress")
+                    .then(response => response.json())
+                    .then(progress => {
+                        console.log("Progress data:", progress);
+                        
+                        // Store progress in localStorage
+                        localStorage.setItem("progress_level", progress.progress_level || 0);
+                        if (localStorage.getItem("level1Completed") === "true") {  // Only set if not already stored
+                            localStorage.setItem("level1Completed", progress.progress_level >= 1 ? "true" : "false");
+                        }
+                        if (localStorage.getItem("level2Completed") === "true") {
+                        localStorage.setItem("level2Completed", progress.progress_level >= 2 ? "true" : "false");
+                        }
+                        // Calculate and display quiz score
+                        let quiz_score = (progress.alphaquiz+progress.noquiz+progress.twoquiz+progress.threequiz)/4 || 0;
+                        
+                        document.getElementById("learning-streak").textContent = progress.streak || 0;
+                        let gender = progress.progress_level;
+                                let profileImg = document.getElementById("current-level");
+                                if (gender === 1) {
+                                    profileImg.textContent = "Beginner";
+                                } else if (gender === 2) {
+                                    profileImg.textContent = "Intermediate";
+                                }
+                                else if (gender === 3) {
+                                    profileImg.textContent = "Advanced";
+                                }
+                        // Update UI elements
+                        document.getElementById("quizzes-taken").textContent = progress.quiz || 0;
+                        document.getElementById("lastActive").textContent = progress.date || "Never";
+                        document.getElementById("progressLevel").textContent = progress.progress_level || 0;
+                        document.getElementById("quizScore").textContent = progress.noquiz + "%" || "N/A";
+                        document.getElementById("memoryGameScore").textContent = progress.alphaquiz + "%" || "N/A";
+                        document.getElementById("Score").textContent = progress.twoquiz + "%" || "N/A";
+                        document.getElementById("Score3").textContent = progress.threequiz + "%" || "N/A";
+                        
+                        // Update progress bar
+                        document.getElementById("progress-fill").style.width = `${quiz_score}%`;
+                        document.getElementById("progress-text").textContent = `Progress: ${Math.round(quiz_score)}%`;
+                        document.getElementById("average-score").textContent = `${Math.round(quiz_score)}%`;
+                        
+                        unlockLevels(); // Re-check level unlock status
+                    })
+                    .catch(error => {
+                        console.error("Error fetching progress:", error);
+                    });
+            } else {
+                console.warn("No user ID found, redirecting to login");
+                window.location.href = "web.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user data:", error));
+});
+    </script>
+
+</body>
+</html>

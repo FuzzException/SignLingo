@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Quiz</title>
+    <link rel="stylesheet" href="../static/quiz-styles.css">
+</head>
+<body>
+    <section id="quiz">
+        <div class="container">
+            <h1 id="quiz-title">Guess the alphabet</h1>
+            <div id="quiz-container">
+                <img id="quiz-image" src="" alt="Question image" style="max-width: 100%; height: auto;">
+                <div id="options-container"></div>
+                <p id="feedback"></p>
+            </div>
+            <progress id="quiz-progress" value="0" max="100"></progress>
+            <p id="progress-text">0% completed</p>
+                       
+            <div id="options-container"></div>
+            <div id="feedback"></div>                  
+        </div>
+        <button id="finish-quiz-btn">Finish Quiz</button>
+    </section>
+    <script src="../static/quiz-script.js"></script>
+</body>
+</html>

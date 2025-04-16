@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English to ISL Translator</title>
+    <link rel="stylesheet" href="../static/signstyles.css" type="text/css"> 
+    <style>
+        #video-frame {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>English text to ISL Translator</h1>
+        <h2>Enter the Paragraph</h2>
+        <textarea id="paragraph" rows="4" cols="50"></textarea>
+        <button onclick="submitParagraph()">Submit</button>
+    </div>
+    
+    <div id="video-frame"></div>
+
+    <script>
+        function submitParagraph() {
+            const paragraph = document.getElementById('paragraph').value;
+            fetch('/get_videos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ paragraph: paragraph })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const videoFrame = document.getElementById('video-frame');
+                videoFrame.innerHTML = '';
+                var playlist = "";
+                data.video_urls.forEach(url => {
+                  const string = url.split("=");
+                  playlist=playlist.concat(string[1], ",")
+                });
+                const iframe = document.createElement('iframe');
+                iframe.width = "560";
+                iframe.height = "315";
+                iframe.frameBorder = "0";
+                iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                iframe.allowFullscreen = true;
+                iframe.src = `https://www.youtube.com/embed?rel=0&version=3&playlist=${playlist}&autoplay=1`
+                videoFrame.appendChild(iframe);
+            });
+        }
+
+    </script>
+</body>
+</html>

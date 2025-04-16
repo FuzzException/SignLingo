@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Learning Progress</title>
+    <link rel="stylesheet" href="/static/style3.css">
+    <!-- Add Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Your Learning Progress</h1>
+            <nav>
+                <ul>
+                    <li><a href="/">Translator</a></li>
+                    <li><a href="/quiz">Quiz</a></li>
+                    <li><a href="/progress" class="active">Progress</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="progress-content">
+            <!-- Progress Summary -->
+            <section class="progress-summary">
+                <div class="card">
+                    <h2>Learning Summary</h2>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <div class="stat-value" id="quizzes-taken">0</div>
+                            <div class="stat-label">Quizzes Completed</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="words-learned">0</div>
+                            <div class="stat-label">Words Learned</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="learning-streak">0</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="current-level">Beginner</div>
+                            <div class="stat-label">Current Level</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Bar -->
+            <section class="progress-bar-section">
+                <div class="card">
+                    <h2>Overall Progress</h2>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-percentage" id="progress-percentage">0%</div>
+                    </div>
+                    <div class="level-indicators">
+                        <span class="level-marker" style="left: 0%">Beginner</span>
+                        <span class="level-marker" style="left: 33%">Intermediate</span>
+                        <span class="level-marker" style="left: 66%">Advanced</span>
+                        <span class="level-marker" style="left: 100%">Fluent</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Two-column layout for remaining sections -->
+            <div class="two-column">
+                <!-- Quiz Performance -->
+                <section class="quiz-performance">
+                    <div class="card">
+                        <h2>Quiz Performance</h2>
+                        <canvas id="quizChart"></canvas>
+                        <div class="quiz-stats">
+                            <p>Average Score: <span id="average-score">N/A</span></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Areas to Improve -->
+                <section class="areas-to-improve">
+                    <div class="card">
+                        <h2>Areas to Improve</h2>
+                        <div id="weak-areas-container">
+                            <p class="no-data" id="no-weak-areas">Complete more quizzes to identify areas for improvement.</p>
+                            <ul class="weak-areas-list" id="weak-areas-list" style="display: none;">
+                                <!-- Will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Recent Activity -->
+            <section class="recent-activity">
+                <div class="card">
+                    <h2>Recent Activity</h2>
+                    <div id="activity-container">
+                        <p class="no-data" id="no-activity">No recent activity.</p>
+                        <ul class="activity-list" id="activity-list" style="display: none;">
+                            <!-- Will be populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recommendations -->
+            <section class="recommendations">
+                <div class="card">
+                    <h2>Recommendations</h2>
+                    <ul class="recommendations-list" id="recommendations-list">
+                        <!-- Will be populated by JavaScript -->
+                        <li>Try to practice daily to build a learning streak and improve retention.</li>
+                        <li>Complete more easy quizzes with high scores to advance to intermediate level.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script src="/static/js/progress.js"></script>
+    <script>
+        // Sample data for testing - replace with actual API call in production
+        const stats = {
+            quizzes_taken: 12,
+            words_learned: 143,
+            learning_streak: 5,
+            current_level: 'medium',
+            progress_percentage: 45,
+            quiz_history: [
+                {score_percentage: 65, difficulty: 'easy'},
+                {score_percentage: 78, difficulty: 'easy'},
+                {score_percentage: 85, difficulty: 'easy'},
+                {score_percentage: 72, difficulty: 'medium'},
+                {score_percentage: 68, difficulty: 'medium'},
+                {score_percentage: 75, difficulty: 'medium'},
+                {score_percentage: 82, difficulty: 'medium'},
+                {score_percentage: 79, difficulty: 'medium'},
+                {score_percentage: 70, difficulty: 'hard'},
+                {score_percentage: 65, difficulty: 'hard'},
+                {score_percentage: 73, difficulty: 'hard'},
+                {score_percentage: 77, difficulty: 'hard'}
+            ],
+            weak_areas: [
+                {area: 'finger_spelling', count: 8},
+                {area: 'numbers', count: 5},
+                {area: 'everyday_phrases', count: 3}
+            ],
+            recent_activity: [
+                {type: 'quiz', details: 'Completed Hard Quiz with 77% score', date: '2025-03-01T14:30:00'},
+                {type: 'learning', details: 'Practiced 15 new signs', date: '2025-03-01T10:15:00'},
+                {type: 'quiz', details: 'Completed Hard Quiz with 73% score', date: '2025-02-28T16:45:00'},
+                {type: 'learning', details: 'Reviewed 20 signs', date: '2025-02-28T09:20:00'},
+                {type: 'quiz', details: 'Completed Hard Quiz with 65% score', date: '2025-02-27T11:10:00'}
+            ]
+        };
+
+        // Initialize the page with data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update summary stats
+            document.getElementById('quizzes-taken').textContent = stats.quizzes_taken;
+            document.getElementById('words-learned').textContent = stats.words_learned;
+            document.getElementById('learning-streak').textContent = stats.learning_streak;
+            document.getElementById('current-level').textContent = stats.current_level.charAt(0).toUpperCase() + stats.current_level.slice(1);
+            
+            // Update progress bar
+            document.getElementById('progress-fill').style.width = stats.progress_percentage + '%';
+            document.getElementById('progress-percentage').textContent = stats.progress_percentage + '%';
+            
+            // Calculate and update average score
+            if (stats.quiz_history && stats.quiz_history.length > 0) {
+                const totalScore = stats.quiz_history.reduce((sum, quiz) => sum + quiz.score_percentage, 0);
+                const averageScore = (totalScore / stats.quiz_history.length).toFixed(1);
+                document.getElementById('average-score').textContent = averageScore + '%';
+            }
+            
+            // Update weak areas
+            if (stats.weak_areas && stats.weak_areas.length > 0) {
+                document.getElementById('no-weak-areas').style.display = 'none';
+                const weakAreasList = document.getElementById('weak-areas-list');
+                weakAreasList.style.display = 'block';
+                
+                stats.weak_areas.forEach(area => {
+                    const li = document.createElement('li');
+                    const areaName = document.createElement('div');
+                    areaName.className = 'area-name';
+                    areaName.textContent = area.area.replace('_', ' ').replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+                    
+                    const areaBar = document.createElement('div');
+                    areaBar.className = 'area-bar';
+                    
+                    const areaFill = document.createElement('div');
+                    areaFill.className = 'area-fill';
+                    areaFill.style.width = Math.round(area.count / stats.quizzes_taken * 100) + '%';
+                    
+                    areaBar.appendChild(areaFill);
+                    li.appendChild(areaName);
+                    li.appendChild(areaBar);
+                    weakAreasList.appendChild(li);
+                });
+            }
+            
+            // Update recent activity
+            if (stats.recent_activity && stats.recent_activity.length > 0) {
+                document.getElementById('no-activity').style.display = 'none';
+                const activityList = document.getElementById('activity-list');
+                activityList.style.display = 'block';
+                
+                stats.recent_activity.forEach(activity => {
+                    const li = document.createElement('li');
+                    li.className = 'activity-item ' + activity.type;
+                    
+                    const activityIcon = document.createElement('div');
+                    activityIcon.className = 'activity-icon';
+                    
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = 'icon ' + activity.type + '-icon';
+                    iconSpan.textContent = activity.type === 'quiz' ? 'Q' : 'L';
+                    
+                    activityIcon.appendChild(iconSpan);
+                    
+                    const activityDetails = document.createElement('div');
+                    activityDetails.className = 'activity-details';
+                    
+                    const activityType = document.createElement('div');
+                    activityType.className = 'activity-type';
+                    activityType.textContent = activity.type.charAt(0).toUpperCase() + activity.type.slice(1);
+                    
+                    const activityInfo = document.createElement('div');
+                    activityInfo.className = 'activity-info';
+                    activityInfo.textContent = activity.details;
+                    
+                    const activityDate = document.createElement('div');
+                    activityDate.className = 'activity-date';
+                    activityDate.textContent = activity.date.replace('T', ' ').substring(0, 16);
+                    
+                    activityDetails.appendChild(activityType);
+                    activityDetails.appendChild(activityInfo);
+                    activityDetails.appendChild(activityDate);
+                    
+                    li.appendChild(activityIcon);
+                    li.appendChild(activityDetails);
+                    activityList.appendChild(li);
+                });
+            }
+            
+            // Update recommendations
+            const recommendationsList = document.getElementById('recommendations-list');
+            recommendationsList.innerHTML = '';
+            
+            if (stats.weak_areas && stats.weak_areas.length > 0) {
+                const weakAreaName = stats.weak_areas[0].area.replace('_', ' ');
+                const li = document.createElement('li');
+                li.textContent = `Focus on practicing ${weakAreaName} exercises to improve your skills.`;
+                recommendationsList.appendChild(li);
+            }
+            
+            const streakLi = document.createElement('li');
+            if (stats.learning_streak > 0) {
+                streakLi.textContent = `Great job maintaining a ${stats.learning_streak} day streak! Keep it up!`;
+            } else {
+                streakLi.textContent = 'Try to practice daily to build a learning streak and improve retention.';
+            }
+            recommendationsList.appendChild(streakLi);
+            
+            const levelLi = document.createElement('li');
+            if (stats.current_level === 'easy') {
+                levelLi.textContent = 'Complete more easy quizzes with high scores to advance to intermediate level.';
+            } else if (stats.current_level === 'medium') {
+                levelLi.textContent = 'Challenge yourself with more intermediate quizzes to reach advanced level.';
+            } else {
+                levelLi.textContent = 'Keep practicing with advanced quizzes to maintain and improve your skills.';
+            }
+            recommendationsList.appendChild(levelLi);
+            
+            // Create the quiz performance chart
+            if (stats.quiz_history && stats.quiz_history.length > 0) {
+                // Prepare data for chart
+                const labels = stats.quiz_history.map((quiz, index) => `Quiz ${index + 1}`);
+                const scores = stats.quiz_history.map(quiz => quiz.score_percentage);
+                const difficulties = stats.quiz_history.map(quiz => quiz.difficulty);
+                
+                // Create the chart
+                const ctx = document.getElementById('quizChart').getContext('2d');
+                const quizChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Quiz Scores',
+                            data: scores,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointBackgroundColor: function(context) {
+                                const index = context.dataIndex;
+                                const difficulty = difficulties[index];
+                                
+                                if (difficulty === 'easy') return 'rgba(75, 192, 192, 1)';
+                                if (difficulty === 'medium') return 'rgba(255, 159, 64, 1)';
+                                return 'rgba(255, 99, 132, 1)';
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Score (%)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Quiz Number'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(context) {
+                                        const index = context.dataIndex;
+                                        const difficulty = difficulties[index];
+                                        return 'Difficulty: ' + difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

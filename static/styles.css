@@ -1,0 +1,237 @@
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    text-shadow: 1px 1px 0 #06751a,   
+    -1px 1px 0 #06751a, 
+    1px -1px 0 #06751a,  
+    -1px -1px 0 #06751a;
+    margin: 0;
+    padding: 0;
+    background: url('backgrd.png') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.profile-logo {
+    display: flex;
+    align-items: center; /* Align items in the same row */
+    gap: 10px; /* Add spacing between image and name */
+}
+
+#profile-img {
+    border-radius: 50%; /* Make it circular if needed */
+    width: 80px;
+    height: 80px;
+}
+
+.profile-logo img {
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+#user-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.heading
+{
+    color:#87c345   ;
+    margin-top: 10px;
+}
+.style
+{
+    margin-top: 10px;
+    color:#87c345  ;
+    font-size: 1.8vw;
+}
+.container {
+    background-color: rgba(255, 255, 255, 0.8); /* Transparency for the content */
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 100vw; /* 90% of the viewport width */
+    height: 100vh; /* 90% of the viewport height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1200px) {
+    .container {
+        width: 95vw; /* Make it larger on smaller screens */
+        height: 95vh;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .container {
+        width: 100vw; /* Full width for mobile */
+        height: 100vh; /* Full height for mobile */
+    }
+
+    form input, form select, form button {
+        width: 90%;
+    }
+
+    .level {
+        width: 80%;
+    }
+}
+
+/* Home Page */
+#logo {
+    width: 25vw; /* 20% of the viewport width */
+    cursor: pointer;
+    margin-top: 10px;
+    transition: transform 0.3s ease, opacity 0.3s ease; 
+}
+#logo:hover{
+    transform: scale(1.1); 
+    opacity: 0.8; 
+}
+/* User Info Page */
+#user-info h1 {
+    margin-bottom: 20px;
+    color: #87c345  ; /* Dark green */
+    font-size: 3vw; /* Responsive font size */
+}
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form label {
+    margin: 10px 0;
+    font-weight: bold;
+    color: #f7c565 ;
+    text-shadow: 1px 1px 0 #9a8109,   
+    -1px 1px 0 #9a8109, 
+    1px -1px 0 #9a8109,  
+    -1px -1px 0 #9a8109; /* Dark yellow */
+    font-size: 1.5vw; /* Responsive font size */
+}
+
+form input, form select, form button {
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1.2vw;
+    width: 60%;
+    max-width: 500px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+form input, form select {
+    background-color: #ffecb3; /* Light yellow background */
+}
+
+button {
+    background-color: #87c345  ; /* Dark green button */
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 50%;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #87c345  ; /* Darker green on hover */
+}
+
+/* Roadmap Page */
+header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+}
+
+.profile-logo img {
+    width: 5vw;
+    border-radius: 50%;
+}
+
+h1 {
+    margin-top: 20px;
+    color: #f7c565 ; /* Dark yellow */
+    font-size: 3vw; /* Responsive font size */
+}
+
+.roadmap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+    width: 100%;
+}
+
+/* General Styles */
+.level {
+    background-color: #81c784; /* Light green */
+    padding: 15px;
+    margin: 10px 0;
+    width: 60%;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 18px;
+    border-radius: 10px;
+    color: white;
+    position: relative; /* Needed for positioning the lock icon */
+    transition: background-color 0.3s;
+}
+.level:hover {
+    background-color: #66bb6a; /* Darker green on hover */
+}
+
+
+/* Lock Icon */
+.lock-icon {
+    font-size: 1.5em;
+    color: #66bb6a; /* Red color for the lock icon */
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    display: none; /* Initially hidden */
+}
+
+/* Locked Levels */
+.locked {
+    background-color: #66bb6a; /* Red background for locked levels */
+    cursor: not-allowed; /* Show a not-allowed cursor */
+}
+
+.locked:hover .lock-icon {
+    display: block; /* Show lock icon on hover */
+}
+.button-container {
+    display: flex;
+    gap: 10px; /* Spacing between buttons */
+    margin-top: 20px;
+}
+
+#roadmap-btn, #dashboard-btn {
+    display: block !important; 
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #87c345;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+}
+
+#roadmap-btn:hover, #dashboard-btn:hover {
+    background-color: #66bb6a;
+}
