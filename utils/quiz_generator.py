@@ -5,9 +5,10 @@ from utils.isl_converter import convert_to_isl
 SAMPLE_SENTENCES = {
     'easy': [
         "My name is John",
-        "I am happy",
         "She is a teacher",
+        "I am learning sign language",
         "He went to school",
+        "Please help me find the bathroom",
         "Keep a safe distance",
         "I will call you tomorrow",
         "They work from home",

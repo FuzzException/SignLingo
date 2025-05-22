@@ -10,6 +10,7 @@ from recommender2 import calculate_similarities, recommend_words, auto_categoriz
 import pandas as pd
 import sqlite3
 import os
+os.environ['MPLBACKEND'] = 'Agg'  # Force matplotlib to use non-interactive backend
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date, timedelta
@@ -24,6 +25,30 @@ nltk.download('punkt')
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.urandom(24)  # For session management
 CORS(app)
+if 'FLASK_APP' in os.environ:
+    try:
+        # Only import Tkinter if needed and capture/discard any errors
+        import tkinter as tk
+        # Create a root window that will manage Tkinter's internal state
+        root = tk.Tk()
+        root.withdraw()  # Hide the window
+        # NOTE: This root should persist for the lifetime of the application
+    except ImportError:
+        print("Tkinter not available, using alternative methods")
+    except Exception as e:
+        print(f"Could not initialize Tkinter: {e}")
+
+# Then modify your model loading code to handle potential Tkinter issues:
+
+# Wrap your SentenceTransformer initialization in a try/except
+try:
+    from sentence_transformers import SentenceTransformer
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+except RuntimeError as e:
+    if "main thread is not in main loop" in str(e):
+        print("Warning: Tkinter threading issue detected. Consider running in a separate process.")
+        # You might need a fallback or alternative approach here
+    raise
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -50,9 +75,9 @@ class User(db.Model):
 # Create database tables (Run once)
 with app.app_context():
     db.create_all()  # Recreate tables with the new structure
-    print("Database tables recreated!")
+    print("Database tables recreated!")
 
-df = pd.read_csv(r"C:\Users\DELL\OneDrive\Desktop\Final_prjt\Final_dataset.csv")
+df = pd.read_csv(r"/Users/sarahgteerthan/Desktop/Finalproject-main/Final_dataset.csv")
 # Initialize sample data and recommender
 sample_data=pd.read_csv("filtered_categories1.csv")
 data=pd.read_csv("learning.csv")
@@ -155,7 +180,7 @@ def web():
 def dashboard():
     return render_template('dashboard.html')
 
-# User authentication routes
+# Update the signup function to return a redirect instead of a JSON response
 @app.route("/signup", methods=["POST"])
 def signup():
     try:
@@ -166,24 +191,32 @@ def signup():
         gender = data.get("gender")
 
         if not username or not gender:
-            return jsonify({"message": "Username and gender are required"}), 400
+            return jsonify({"message": "Username and gender are required", "redirect": False}), 400
 
         if User.query.filter_by(username=username).first():
-            return jsonify({"message": "Username already taken"}), 400
+            return jsonify({"message": "Username already taken", "redirect": False}), 400
 
         new_user = User(username=username, gender=gender)
         db.session.add(new_user)
         db.session.commit()
         
-        # Get the new user's ID to return
+        # Get the new user's ID
         user_id = new_user.id
+        session["user_id"] = user_id  # Store in session
         
-        return jsonify({"message": "Signup successful!", "user_id": user_id})
+        # Return both success message and redirect URL
+        return jsonify({
+            "message": "Signup successful!", 
+            "user_id": user_id,
+            "redirect": True,
+            "redirect_url": "/"  # Redirect to route for web.html
+        })
     except Exception as e:
         print("Signup error:", str(e))
         db.session.rollback()
-        return jsonify({"message": "Error during signup: " + str(e)}), 500
+        return jsonify({"message": "Error during signup: " + str(e), "redirect": False}), 500
 
+# Update the login function similarly
 @app.route("/login", methods=["POST"])
 def login():
     try:
@@ -194,11 +227,16 @@ def login():
         user = User.query.filter_by(username=username, gender=gender).first()
         if user:
             session["user_id"] = user.id
-            return jsonify({"message": "Login successful", "user_id": user.id})
-        return jsonify({"message": "Invalid credentials"}), 401
+            return jsonify({
+                "message": "Login successful", 
+                "user_id": user.id,
+                "redirect": True,
+                "redirect_url": "/"  # Redirect to route for web.html
+            })
+        return jsonify({"message": "Invalid credentials", "redirect": False}), 401
     except Exception as e:
         print("Login error:", str(e))
-        return jsonify({"message": "Error during login: " + str(e)}), 500
+        return jsonify({"message": "Error during login: " + str(e), "redirect": False}), 500
 
 # Function to connect to the database
 
@@ -307,13 +345,24 @@ def number():
 @app.route('/static/videos/<filename>')
 def get_video(filename):
     return send_from_directory('static/videos', filename, as_attachment=False)
+VIDEO_FOLDER = "static/videos"
 
-VIDEO_FOLDER = "static/videos"  # Path to your video folder
+@app.route('/static/assets1/<filename>')
+def get_word(filename):
+    return send_from_directory('static/assets1', filename, as_attachment=False)
+WORD_FOLDER = "static/assets1"
 
 @app.route('/get_video_list')
 def get_video_list():
     try:
         video_files = [f for f in os.listdir(VIDEO_FOLDER) if f.endswith('.mp4')]
+        return jsonify(video_files)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/get_word_list')
+def get_word_list():
+    try:
+        video_files = [f for f in os.listdir(WORD_FOLDER) if f.endswith('.jpg')]
         return jsonify(video_files)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -564,4 +613,4 @@ def clear_session():
 
 # Add this at the end of your file
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=8008, debug=True)

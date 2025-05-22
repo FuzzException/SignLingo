@@ -516,7 +516,7 @@ def interactive_recommendations(recommend_function):
 
 # Run the system with your data
 if __name__ == "__main__":
-    file_path = pd.read_csv(r"C:\Users\DELL\OneDrive\Desktop\Final_prjt\learning.csv")
+    file_path = pd.read_csv(r"/Users/sarahgteerthan/Desktop/Finalproject-main/learning.csv")
     recommend_function, model_data = main(file_path)
 
     # Option to run interactive mode
